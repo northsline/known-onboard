@@ -12,7 +12,7 @@
 	import { base } from '$app/paths';
 
 	// USB WebSerial provisioning:
-	//   connect -> confirm code -> wifi -> activate (cloud) -> provision (serial) -> done
+	//   connect -> activate (cloud) -> wifi -> provision (serial) -> done
 	type Step = 'connect' | 'confirm' | 'wifi' | 'done';
 	let step = $state<Step>('connect');
 
@@ -24,49 +24,60 @@
 	let ssid = $state('');
 	let wifiPass = $state('');
 
+	let codeValid = $derived(STICKER_RE.test(deviceCode.trim().toUpperCase()));
+
 	async function handleConnect() {
 		error = '';
 		busy = true;
 		try {
 			await connectSerial();
 			const id = await identifyDevice();
-			if (!id.code || !STICKER_RE.test(id.code)) {
-				error = t.onboarding.errNoCode;
-				await disconnectSerial();
-				return;
+			if (id.code) {
+				deviceCode = id.code;
 			}
-			deviceCode = id.code;
 			step = 'confirm';
 		} catch (e) {
-			error = e instanceof Error ? e.message : String(e);
+			const msg = e instanceof Error ? e.message : String(e);
+			if (msg.includes('bad_json')) error = t.onboarding.errSerial;
+			else if (msg.includes('Timed out')) error = t.onboarding.errTimeout;
+			else error = msg;
 			await disconnectSerial();
 		} finally {
 			busy = false;
 		}
 	}
 
-	function confirmCode() {
+	async function handleActivate() {
+		const code = deviceCode.trim().toUpperCase();
+		if (!STICKER_RE.test(code)) {
+			error = t.onboarding.errNoCode;
+			return;
+		}
 		error = '';
-		step = 'wifi';
+		busy = true;
+		try {
+			const result = await activateSticker(code);
+			if (result.status !== 'ok') {
+				error = t.onboarding.errActivate;
+				return;
+			}
+			deviceCode = code;
+			step = 'wifi';
+		} catch (e) {
+			error = e instanceof Error ? e.message : t.onboarding.errActivate;
+		} finally {
+			busy = false;
+		}
 	}
 
-	async function activateAndProvision(e: SubmitEvent) {
+	async function handleProvision(e: SubmitEvent) {
 		e.preventDefault();
 		if (!ssid.trim()) return;
 		error = '';
 		busy = true;
 		try {
-			// 1. Claim the sticker code in the cloud registry (single-use).
-			const result = await activateSticker(deviceCode);
-			if (result.status !== 'ok') {
-				error = t.onboarding.errActivate;
-				return;
-			}
-			// 2. Push Wi-Fi credentials to the device over serial.
 			await provisionDevice(ssid.trim(), wifiPass, deviceCode);
 			await disconnectSerial();
-			// 3. Remember the now-activated code so a return visit knows this
-			//    device was set up from here.
 			if (typeof localStorage !== 'undefined') {
 				localStorage.setItem(STORAGE_KEYS.sticker, deviceCode);
 			}
@@ -99,6 +110,9 @@
 				<button class="gate-submit" onclick={handleConnect} disabled={busy}>
 					{busy ? t.onboarding.connecting : t.onboarding.connectBtn}
 				</button>
+				{#if busy}
+					<p class="gate-hint">{t.onboarding.connectingHint}</p>
+				{/if}
 				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
 				<p class="gate-hint">{t.onboarding.hint}</p>
 			</div>
@@ -108,8 +122,21 @@
 				<p class="gate-sub">{t.onboarding.stepConfirmBody}</p>
 			</div>
 			<div class="panel">
-				<p class="device-code mono">{deviceCode}</p>
-				<button class="gate-submit" onclick={confirmCode}>{t.onboarding.confirmBtn}</button>
+				<label class="field">
+					<span class="field-label">{t.onboarding.codeLabel}</span>
+					<input
+						class="field-input mono"
+						type="text"
+						bind:value={deviceCode}
+						placeholder="KNOWN-XXXX-XXXX"
+						autocomplete="off"
+						autocapitalize="characters"
+						spellcheck="false"
+					/>
+				</label>
+				<button class="gate-submit" onclick={handleActivate} disabled={busy || !codeValid}>
+					{busy ? t.onboarding.activating : t.onboarding.activateBtn}
+				</button>
 				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
 			</div>
 		{:else if step === 'wifi'}
@@ -117,7 +144,7 @@
 				<h1 class="gate-title" id="gate-title">{t.onboarding.stepWifiTitle}</h1>
 				<p class="gate-sub">{t.onboarding.stepWifiBody}</p>
 			</div>
-			<form class="panel" onsubmit={activateAndProvision}>
+			<form class="panel" onsubmit={handleProvision}>
 				<label class="field">
 					<span class="field-label">{t.onboarding.wifiSsid}</span>
 					<input class="field-input" type="text" bind:value={ssid} autocomplete="off" required />
@@ -127,7 +154,7 @@
 					<input class="field-input" type="password" bind:value={wifiPass} autocomplete="off" />
 				</label>
 				<button class="gate-submit" type="submit" disabled={busy || !ssid.trim()}>
-					{busy ? t.onboarding.activating : t.onboarding.activateBtn}
+					{busy ? t.onboarding.provisioning : t.onboarding.provisionBtn}
 				</button>
 				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
 			</form>
@@ -223,17 +250,6 @@
 		width: 100%;
 	}
 
-	.device-code {
-		font-size: 22px;
-		letter-spacing: 0.16em;
-		text-indent: 0.16em;
-		color: var(--paper);
-		padding: 16px;
-		border-radius: var(--r-sm);
-		background: rgba(255, 255, 255, 0.06);
-		border: 1px solid rgba(255, 255, 255, 0.14);
-	}
-
 	.field {
 		display: flex;
 		flex-direction: column;
@@ -262,6 +278,9 @@
 		border-color: var(--paper-soft);
 		background: rgba(255, 255, 255, 0.09);
 		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+	}
+	.field-input.mono {
+		letter-spacing: 0.08em;
 	}
 
 	.gate-error {
