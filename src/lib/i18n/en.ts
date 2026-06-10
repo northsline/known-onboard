@@ -45,6 +45,8 @@ export const en = {
 		// Success screen
 		stepDoneTitle: 'Your device is ready.',
 		stepDoneBody: 'Unplug it from your PC and connect it to the wall adapter.',
+		stepDoneDashboard: "Once it's plugged in, your dashboard is at",
+		stepDoneUrl: 'known.local',
 		downloadLead: 'Download the Known Dashboard:',
 		downloadLink: 'github.com/northsline/known-dashboard/releases',
 		downloadUrl: 'https://github.com/northsline/known-dashboard/releases',
