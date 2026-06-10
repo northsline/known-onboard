@@ -13,11 +13,11 @@ export const en = {
 
 	onboarding: {
 		welcome: 'Set up your Known.',
-		hint: 'Setup uses your USB port. Chrome or Edge required.',
+		hint: "If this doesn't work, try Chrome or Edge.",
 
 		// USB WebSerial provisioning flow
 		unsupported:
-			'This browser can’t set up Known. Open this page in Chrome or Edge, which support WebSerial.',
+			'This browser can't set up Known. Try Chrome or Edge.',
 		stepConnectTitle: 'Connect your Known',
 		stepConnectBody: 'Plug Known into this computer with the USB cable, then connect.',
 		connectBtn: 'Connect device',
@@ -38,9 +38,9 @@ export const en = {
 		errProvision: 'We couldn’t save the settings to your device. Reconnect and try again.',
 		errNoCode: 'Your Known didn’t report a code. Reconnect and try again.',
 		errSerial:
-			'Couldn’t talk to your Known over USB. Close Thonny or any serial monitor, unplug and replug the device, wait for setup mode on the display, then try again.',
+			'We couldn't reach your Known. Unplug it, wait five seconds, plug it back in, and try again.',
 		errTimeout:
-			'Your Known didn’t respond in time. Make sure it’s plugged in, close any other app using the USB port, and try again.',
+			'Your Known didn't respond. Unplug it, wait a moment, plug it back in, and try again.',
 
 		// Success screen
 		stepDoneTitle: 'Your device is ready.',
