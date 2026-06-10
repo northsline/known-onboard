@@ -162,6 +162,9 @@
 			<div class="gate-head">
 				<h1 class="gate-title" id="gate-title">{t.onboarding.stepDoneTitle}</h1>
 				<p class="gate-sub">{t.onboarding.stepDoneBody}</p>
+				<p class="gate-sub dashboard-hint">
+					{t.onboarding.stepDoneDashboard} <a href="http://known.local:8080" class="dashboard-link">{t.onboarding.stepDoneUrl}</a>
+				</p>
 			</div>
 			<div class="panel done-panel">
 				<p class="done-line">
@@ -341,5 +344,16 @@
 		font-size: 13px;
 		line-height: 1.5;
 		color: var(--paper-mute);
+	}
+	.dashboard-hint {
+		margin-top: 8px;
+	}
+	.dashboard-link {
+		color: var(--paper);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.dashboard-link:hover {
+		opacity: 0.82;
 	}
 </style>
