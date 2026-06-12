@@ -27,6 +27,7 @@ export const en = {
 		connectHelp: 'We need to talk to your Known over USB to set up Wi-Fi. Nothing leaves your computer.',
 		stepConfirmTitle: 'Activate your device',
 		stepConfirmBody: 'We read this code from your Known. Check it matches the sticker, then activate.',
+		codeHint: 'This code is on the sticker on the bottom of your Known. We already read it for you — double-check it matches.',
 		codeLabel: 'Device code',
 		activateBtn: 'Activate',
 		activating: 'Activating…',

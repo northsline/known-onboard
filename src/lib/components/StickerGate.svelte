@@ -144,6 +144,7 @@
 						spellcheck="false"
 					/>
 				</label>
+				<p class="gate-hint">{t.onboarding.codeHint}</p>
 				<button class="gate-submit" onclick={handleActivate} disabled={busy || !codeValid}>
 					{busy ? t.onboarding.activating : t.onboarding.activateBtn}
 				</button>
