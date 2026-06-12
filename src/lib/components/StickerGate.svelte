@@ -137,7 +137,7 @@
 						{:else}
 							<CircleHelp size={18} />
 						{/if}
-						{showHelp ? 'Close' : 'What does this do?'}
+						{showHelp ? t.onboarding.helpClose : t.onboarding.helpOpen}
 					</button>
 				</p>
 				{#if showHelp}
@@ -170,7 +170,7 @@
 						{:else}
 							<CircleHelp size={18} />
 						{/if}
-						{showHelp ? 'Close' : 'What does this do?'}
+						{showHelp ? t.onboarding.helpClose : t.onboarding.helpOpen}
 					</button>
 				</p>
 				{#if showHelp}
@@ -210,7 +210,7 @@
 						{:else}
 							<CircleHelp size={18} />
 						{/if}
-						{showHelp ? 'Close' : 'What does this do?'}
+						{showHelp ? t.onboarding.helpClose : t.onboarding.helpOpen}
 					</button>
 				</p>
 				{#if showHelp}
@@ -235,7 +235,7 @@
 			<div class="panel done-panel">
 				<p class="done-line">
 					{t.onboarding.downloadLead}<br />
-					<a class="done-link" href={t.onboarding.downloadUrl} target="_blank" rel="noreferrer">
+					<a class="done-link" href={t.onboarding.downloadUrl} target="_blank" rel="noopener noreferrer">
 						{t.onboarding.downloadLink}
 					</a>
 				</p>
@@ -247,7 +247,7 @@
 						{:else}
 							<CircleHelp size={18} />
 						{/if}
-						{showHelp ? 'Close' : 'What does this do?'}
+						{showHelp ? t.onboarding.helpClose : t.onboarding.helpOpen}
 					</button>
 				</p>
 				{#if showHelp}
@@ -390,7 +390,19 @@
 		min-height: 18px;
 		font-size: 12.5px;
 		line-height: 1.4;
-		color: oklch(0.74 0.13 25);
+		color: oklch(0.8 0.11 25);
+	}
+
+	.toggle-pass:focus-visible,
+	.help-btn:focus-visible,
+	.copy-url-btn:focus-visible,
+	.gate-submit:focus-visible {
+		outline: 2px solid var(--paper-soft);
+		outline-offset: 2px;
+	}
+
+	.gate-sub {
+		color: var(--paper-soft);
 	}
 
 	.gate-submit {
