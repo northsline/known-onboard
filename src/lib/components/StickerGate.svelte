@@ -10,6 +10,7 @@
 	} from '$lib/serial';
 	import { activateSticker } from '$lib/api/client';
 	import { base } from '$app/paths';
+	import { CircleHelp, X } from '@lucide/svelte';
 
 	// USB WebSerial provisioning:
 	//   connect -> activate (cloud) -> wifi -> provision (serial) -> done
@@ -131,7 +132,12 @@
 				<p class="gate-hint">{t.onboarding.hint}</p>
 				<p class="gate-help">
 					<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
-						<span class="help-icon">{showHelp ? 'x' : 'i'}</span> {showHelp ? 'Close' : 'What does this do?'}
+						{#if showHelp}
+							<X size={18} />
+						{:else}
+							<CircleHelp size={18} />
+						{/if}
+						{showHelp ? 'Close' : 'What does this do?'}
 					</button>
 				</p>
 				{#if showHelp}
@@ -157,6 +163,19 @@
 					/>
 				</label>
 				<p class="gate-hint">{t.onboarding.codeHint}</p>
+				<p class="gate-help">
+					<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
+						{#if showHelp}
+							<X size={18} />
+						{:else}
+							<CircleHelp size={18} />
+						{/if}
+						{showHelp ? 'Close' : 'What does this do?'}
+					</button>
+				</p>
+				{#if showHelp}
+					<p class="help-panel">{t.onboarding.codeHelp}<br/><br/>{t.onboarding.codeHelpList}</p>
+				{/if}
 				<button class="gate-submit" onclick={handleActivate} disabled={busy || !codeValid}>
 					{busy ? t.onboarding.activating : t.onboarding.activateBtn}
 				</button>
@@ -184,6 +203,19 @@
 				<button class="gate-submit" type="submit" disabled={busy || !ssid.trim()}>
 					{busy ? t.onboarding.provisioning : t.onboarding.provisionBtn}
 				</button>
+				<p class="gate-help">
+					<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
+						{#if showHelp}
+							<X size={18} />
+						{:else}
+							<CircleHelp size={18} />
+						{/if}
+						{showHelp ? 'Close' : 'What does this do?'}
+					</button>
+				</p>
+				{#if showHelp}
+					<p class="help-panel">{t.onboarding.wifiHelp}<br/><br/>{t.onboarding.wifiHelpList}</p>
+				{/if}
 				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
 			</form>
 		{:else}
@@ -208,6 +240,19 @@
 					</a>
 				</p>
 				<p class="done-availability">{t.onboarding.availability}</p>
+				<p class="gate-help">
+					<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
+						{#if showHelp}
+							<X size={18} />
+						{:else}
+							<CircleHelp size={18} />
+						{/if}
+						{showHelp ? 'Close' : 'What does this do?'}
+					</button>
+				</p>
+				{#if showHelp}
+					<p class="help-panel">{t.onboarding.doneHelp}<br/><br/>{t.onboarding.doneHelpList}</p>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -382,16 +427,17 @@
 		justify-content: center;
 	}
 	.help-btn {
+		display: flex;
+		align-items: center;
 		background: none;
 		border: none;
 		color: var(--paper-soft);
-		font-size: 12px;
+		font-size: 14px;
 		cursor: pointer;
-		padding: 4px 8px;
+		padding: 6px 10px;
 		border-radius: var(--r-sm);
-		text-decoration: underline;
-		text-underline-offset: 2px;
 		opacity: 0.8;
+		gap: 6px;
 	}
 	.help-btn:hover {
 		opacity: 1;
