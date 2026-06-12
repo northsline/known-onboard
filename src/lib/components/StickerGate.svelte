@@ -25,8 +25,19 @@
 	let ssid = $state('');
 	let wifiPass = $state('');
 	let showWifiPass = $state(false);
+	let copied = $state(false);
 
 	let codeValid = $derived(STICKER_RE.test(deviceCode.trim().toUpperCase()));
+
+	async function copyUrl() {
+		try {
+			await navigator.clipboard.writeText('known.local');
+			copied = true;
+			setTimeout(() => copied = false, 2000);
+		} catch {
+			// clipboard not available
+		}
+	}
 
 	async function handleConnect() {
 		error = '';
@@ -180,7 +191,13 @@
 				<h1 class="gate-title" id="gate-title">{t.onboarding.stepDoneTitle}</h1>
 				<p class="gate-sub">{t.onboarding.stepDoneBody}</p>
 				<p class="gate-sub dashboard-hint">
-					{t.onboarding.stepDoneDashboard} <a href="http://known.local:8080" class="dashboard-link">{t.onboarding.stepDoneUrl}</a>
+					{t.onboarding.stepDoneDashboard} 
+					<button type="button" class="copy-url-btn" onclick={copyUrl}>
+						{t.onboarding.stepDoneUrl}
+					</button>
+					{#if copied}
+						<span class="copied-msg">Copied!</span>
+					{/if}
 				</p>
 			</div>
 			<div class="panel done-panel">
@@ -426,6 +443,25 @@
 	}
 	.dashboard-hint {
 		margin-top: 8px;
+	}
+	.copy-url-btn {
+		background: none;
+		border: none;
+		color: var(--paper);
+		font-size: inherit;
+		font-family: inherit;
+		cursor: pointer;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		padding: 0;
+	}
+	.copy-url-btn:hover {
+		opacity: 0.82;
+	}
+	.copied-msg {
+		margin-left: 8px;
+		font-size: 12px;
+		color: oklch(0.55 0.14 145);
 	}
 	.dashboard-link {
 		color: var(--paper);
