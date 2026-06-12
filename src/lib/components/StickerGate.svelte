@@ -24,6 +24,7 @@
 	let deviceCode = $state('');
 	let ssid = $state('');
 	let wifiPass = $state('');
+	let showWifiPass = $state(false);
 
 	let codeValid = $derived(STICKER_RE.test(deviceCode.trim().toUpperCase()));
 
@@ -162,7 +163,12 @@
 				</label>
 				<label class="field">
 					<span class="field-label">{t.onboarding.wifiPass}</span>
-					<input class="field-input" type="password" bind:value={wifiPass} autocomplete="off" />
+					<div class="password-row">
+						<input class="field-input" type={showWifiPass ? 'text' : 'password'} bind:value={wifiPass} autocomplete="off" />
+						<button type="button" class="toggle-pass" onclick={() => showWifiPass = !showWifiPass}>
+							{showWifiPass ? 'Hide' : 'Show'}
+						</button>
+					</div>
 				</label>
 				<button class="gate-submit" type="submit" disabled={busy || !ssid.trim()}>
 					{busy ? t.onboarding.provisioning : t.onboarding.provisionBtn}
@@ -295,6 +301,27 @@
 	}
 	.field-input.mono {
 		letter-spacing: 0.08em;
+	}
+	.password-row {
+		display: flex;
+		gap: 8px;
+	}
+	.password-row .field-input {
+		flex: 1;
+	}
+	.toggle-pass {
+		height: 48px;
+		padding: 0 12px;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		border-radius: var(--r-sm);
+		color: var(--paper-soft);
+		font-size: 13px;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.toggle-pass:hover {
+		background: rgba(255, 255, 255, 0.09);
 	}
 
 	.gate-error {
