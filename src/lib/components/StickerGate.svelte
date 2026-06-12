@@ -19,6 +19,7 @@
 	let supported = isSerialSupported();
 	let busy = $state(false);
 	let error = $state('');
+	let showHelp = $state(false);
 
 	let deviceCode = $state('');
 	let ssid = $state('');
@@ -99,6 +100,7 @@
 		{#if !supported}
 			<div class="gate-head">
 				<h1 class="gate-title" id="gate-title">{t.onboarding.welcome}</h1>
+				<p class="gate-sub">{t.onboarding.welcomeDetail}</p>
 				<p class="gate-sub">{t.onboarding.unsupported}</p>
 			</div>
 		{:else if step === 'connect'}
@@ -115,6 +117,14 @@
 				{/if}
 				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
 				<p class="gate-hint">{t.onboarding.hint}</p>
+				<p class="gate-help">
+					<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
+						<span class="help-icon">{showHelp ? 'x' : 'i'}</span> {showHelp ? 'Close' : 'What does this do?'}
+					</button>
+				</p>
+				{#if showHelp}
+					<p class="help-panel">{t.onboarding.connectHelp}</p>
+				{/if}
 			</div>
 		{:else if step === 'confirm'}
 			<div class="gate-head">
@@ -321,6 +331,47 @@
 		font-size: 12px;
 		line-height: 1.5;
 		color: var(--paper-mute);
+	}
+	.gate-help {
+		display: flex;
+		justify-content: center;
+	}
+	.help-btn {
+		background: none;
+		border: none;
+		color: var(--paper-soft);
+		font-size: 12px;
+		cursor: pointer;
+		padding: 4px 8px;
+		border-radius: var(--r-sm);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+		opacity: 0.8;
+	}
+	.help-btn:hover {
+		opacity: 1;
+		background: rgba(255, 255, 255, 0.05);
+	}
+	.help-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		border: 1px solid currentColor;
+		border-radius: 50%;
+		font-size: 10px;
+		font-style: italic;
+		margin-right: 4px;
+	}
+	.help-panel {
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--paper-soft);
+		background: rgba(255, 255, 255, 0.05);
+		padding: 10px 12px;
+		border-radius: var(--r-sm);
+		margin-top: 4px;
 	}
 
 	.done-panel {
