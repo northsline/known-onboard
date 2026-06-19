@@ -17,9 +17,9 @@ export const en = {
 			"Set up Known over USB. Your browser asks which port to use. Pick the one that says Raspberry Pi.",
 		hint: 'If this button does nothing, try Chrome or Edge.',
 		// USB WebSerial provisioning flow
-		unsupported: 'This browser cannot set up Known. Try Chrome or Edge.',
+		unsupported: 'This browser cannot set up Known. Try Chrome (google.com/chrome) or Edge (microsoft.com/edge).',
 		stepConnectTitle: 'Connect your Known',
-		stepConnectBody: 'Plug Known into this computer with the USB cable, then hit connect.',
+		stepConnectBody: 'Plug Known into this computer with the USB cable, then press connect.',
 		connectBtn: 'Connect device',
 		connecting: 'Connecting…',
 		connectingHint: 'Your Known is rebooting — this can take up to 10 seconds.',
@@ -29,13 +29,13 @@ export const en = {
 			'Try a different USB cable. Try a different USB port. Unplug Known, wait 5 seconds, plug it back in.',
 		stepConfirmTitle: 'Activate your device',
 		stepConfirmBody:
-			"This code came from your Known. Check it matches the sticker on the bottom. Then activate.",
-		codeHint: "This code is on the sticker on the bottom of your Known. Double-check it matches.",
+			"This code was read from your Known. Check it matches the sticker that came with it. Then activate.",
+		codeHint: "This code is on the sticker that came with your Known. Double-check it matches.",
 		codeLabel: 'Device code',
 		codeHelp:
-			"If the code does not match the sticker, reconnect your Known and try again. The sticker is on the bottom.",
+			"If the code does not match the sticker, reconnect your Known and try again. The sticker came with the device.",
 		codeHelpList:
-			'Reconnect the device. Check the sticker on the bottom of Known. Try a different USB cable.',
+			'Reconnect the device. Check the sticker that came with Known. Try a different USB cable.',
 		activateBtn: 'Activate',
 		activating: 'Activating…',
 		helpOpen: 'What does this do?',
@@ -74,7 +74,7 @@ export const en = {
 		routerHelp:
 			'Known needs to be your network\'s DNS server to monitor traffic. Most routers let you set a custom DNS in the DHCP or WAN settings.',
 		routerHelpList:
-			'The setup page shows instructions for your router model. If you get stuck, email hello@known.network. Include your router model.',
+			'The setup page shows instructions for your router model. If you get stuck, email northsline@protonmail.com. Include your router model.',
 
 		// Success screen
 		stepDoneTitle: 'Your device is ready.',
@@ -86,8 +86,8 @@ export const en = {
 		doneHelpList:
 			'Wait 30 seconds after plugging in. Make sure Known is on the same Wi-Fi as your computer. Open known.local in your browser.',
 		downloadLead: 'Download the Known Dashboard:',
-		downloadLink: 'github.com/northsline/known-dashboard/releases',
-		downloadUrl: 'https://github.com/northsline/known-dashboard/releases',
+		downloadLink: '[dashboard-url]',
+		downloadUrl: '[dashboard-url]',
 		availability: 'Your device is at known.local. Or the IP on its display.'
 	}
 } as const;

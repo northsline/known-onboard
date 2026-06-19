@@ -65,7 +65,7 @@
 			const msg = e instanceof Error ? e.message : String(e);
 			if (msg.includes('bad_json')) error = t.onboarding.errSerial;
 			else if (msg.includes('Timed out')) error = t.onboarding.errTimeout;
-			else error = msg;
+			else error = t.onboarding.errSerial;
 			await disconnectSerial();
 		} finally {
 			busy = false;
