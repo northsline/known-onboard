@@ -196,3 +196,37 @@ export async function provisionDevice(
 	}
 	return res;
 }
+
+export interface WifiNetwork {
+	ssid: string;
+	bssid: string;
+	channel: number;
+	rssi: number;
+	hidden: boolean;
+}
+
+export async function scanNetworks(): Promise<WifiNetwork[]> {
+	await sendCommand({ cmd: 'scan' });
+	const res = await readResponse(10000);
+	if (res.status !== 'ok') {
+		throw new Error(`WiFi scan failed: ${res.reason ?? 'unknown error'}`);
+	}
+	return (res.networks as WifiNetwork[]) ?? [];
+}
+
+export interface RouterInfo {
+	bssid: string;
+	ip: string;
+}
+
+export async function routerInfo(): Promise<RouterInfo> {
+	await sendCommand({ cmd: 'router_info' });
+	const res = await readResponse(8000);
+	if (res.status !== 'ok') {
+		throw new Error(`Router info failed: ${res.reason ?? 'unknown error'}`);
+	}
+	return {
+		bssid: (res.bssid as string) ?? '',
+		ip: (res.ip as string) ?? ''
+	};
+}

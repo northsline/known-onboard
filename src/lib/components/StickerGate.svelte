@@ -6,15 +6,18 @@
 		connectSerial,
 		disconnectSerial,
 		identifyDevice,
-		provisionDevice
+		provisionDevice,
+		scanNetworks,
+		routerInfo,
+		type WifiNetwork
 	} from '$lib/serial';
 	import { activateSticker } from '$lib/api/client';
 	import { base } from '$app/paths';
 	import { CircleHelp, X } from '@lucide/svelte';
 
 	// USB WebSerial provisioning:
-	//   connect -> activate (cloud) -> wifi -> provision (serial) -> done
-	type Step = 'connect' | 'confirm' | 'wifi' | 'done';
+	//   connect -> activate (cloud) -> wifi -> provision (serial) -> router -> done
+	type Step = 'connect' | 'confirm' | 'wifi' | 'router' | 'done';
 	let step = $state<Step>('connect');
 
 	let supported = isSerialSupported();
@@ -27,6 +30,14 @@
 	let wifiPass = $state('');
 	let showWifiPass = $state(false);
 	let copied = $state(false);
+
+	let networks = $state<WifiNetwork[]>([]);
+	let scanBusy = $state(false);
+	let manualSsid = $state(false);
+
+	let routerBssid = $state('');
+	let routerIp = $state('');
+	let routerVendor = $state('');
 
 	let codeValid = $derived(STICKER_RE.test(deviceCode.trim().toUpperCase()));
 
@@ -77,10 +88,103 @@
 			}
 			deviceCode = code;
 			step = 'wifi';
+			// kick off network scan immediately
+			loadNetworks();
 		} catch (e) {
 			error = e instanceof Error ? e.message : t.onboarding.errActivate;
 		} finally {
 			busy = false;
+		}
+	}
+
+	async function loadNetworks() {
+		scanBusy = true;
+		error = '';
+		try {
+			const nets = await scanNetworks();
+			// sort by signal strength (strongest first)
+			networks = nets.sort((a, b) => b.rssi - a.rssi);
+			if (networks.length > 0 && !ssid) {
+				ssid = networks[0].ssid;
+			}
+		} catch (e) {
+			error = e instanceof Error ? e.message : t.onboarding.errScan;
+		} finally {
+			scanBusy = false;
+		}
+	}
+
+	function ouiLookup(bssid: string): string {
+		if (!bssid) return '';
+		const prefix = bssid.slice(0, 8).toUpperCase();
+		const map: Record<string, string> = {
+			'00:1A:2B': 'AVM (Fritz!Box)',
+			'A4:91:B1': 'AVM (Fritz!Box)',
+			'E4:F0:42': 'AVM (Fritz!Box)',
+			'C4:ED:BA': 'AVM (Fritz!Box)',
+			'00:14:22': 'Linksys / Cisco',
+			'00:1E:C7': 'Linksys / Cisco',
+			'00:24:D4': 'Linksys / Cisco',
+			'00:26:5A': 'Netgear',
+			'C0:C1:C0': 'Netgear',
+			'AC:9B:0A': 'Netgear',
+			'28:80:88': 'Netgear',
+			'00:12:BF': 'TP-Link',
+			'78:8A:20': 'TP-Link',
+			'3C:37:86': 'TP-Link',
+			'50:D4:F7': 'TP-Link',
+			'00:1D:0F': 'D-Link',
+			'00:24:A5': 'D-Link',
+			'00:26:75': 'D-Link',
+			'00:50:7F': 'Asus',
+			'00:18:4D': 'Asus',
+			'00:1C:A2': 'Asus',
+			'04:D4:C4': 'Asus',
+			'00:1B:11': 'Belkin',
+			'00:24:89': 'Belkin',
+			'00:26:CE': 'Belkin',
+			'00:15:0C': 'ZyXEL',
+			'00:22:6B': 'ZyXEL',
+			'00:25:9C': 'ZyXEL',
+			'00:08:5B': 'Motorola',
+			'00:14:95': 'Motorola',
+			'00:1B:57': 'Motorola',
+			'00:0C:41': 'Ubiquiti',
+			'00:18:E7': 'Ubiquiti',
+			'00:1E:58': 'Ubiquiti',
+			'B0:95:75': 'Huawei',
+			'00:E0:4C': 'Huawei',
+			'00:1F:A4': 'Apple / AirPort',
+			'00:24:36': 'Apple / AirPort',
+			'00:26:08': 'Apple / AirPort',
+			'04:0C:CE': 'Xiaomi',
+			'64:69:4E': 'Xiaomi',
+			'AC:C1:EE': 'Xiaomi',
+		};
+		return map[prefix] || '';
+	}
+
+	function dnsInstructions(vendor: string, knownIp: string): string {
+		if (!knownIp) knownIp = '192.168.1.42';
+		switch (vendor) {
+			case 'AVM (Fritz!Box)':
+				return `Open fritz.box in your browser. Go to Internet → Account Information → DNS Server. Set the DNSv4 server to ${knownIp}. Save and apply.`;
+			case 'TP-Link':
+				return `Open tplinkwifi.net or 192.168.0.1. Go to Advanced → Network → DHCP Server. Set Primary DNS to ${knownIp}. Save.`;
+			case 'Netgear':
+				return `Open routerlogin.net or 192.168.1.1. Go to Advanced → Setup → WAN Setup. Set DNS Address to ${knownIp}. Apply.`;
+			case 'Asus':
+				return `Open router.asus.com. Go to WAN → Internet Connection → WAN DNS Setting. Set DNS Server 1 to ${knownIp}. Apply.`;
+			case 'Linksys / Cisco':
+				return `Open 192.168.1.1. Go to Connectivity → Local Network. Set Static DNS 1 to ${knownIp}. Save.`;
+			case 'Apple / AirPort':
+				return `Open AirPort Utility, select your base station, click Edit. Go to Internet → DNS Servers and add ${knownIp}. Update.`;
+			case 'Huawei':
+				return `Open 192.168.3.1 or 192.168.1.1. Go to DHCP or LAN settings. Set DNS server to ${knownIp}. Save.`;
+			case 'Xiaomi':
+				return `Open 192.168.31.1 or miwifi.com. Go to Settings → LAN Settings → DHCP. Set DNS to ${knownIp}. Save.`;
+			default:
+				return `Log into your router (usually 192.168.1.1 or 192.168.0.1). Find the DHCP or DNS settings page and set the primary DNS server to ${knownIp}. Save and restart your router if needed.`;
 		}
 	}
 
@@ -91,13 +195,30 @@
 		busy = true;
 		try {
 			await provisionDevice(ssid.trim(), wifiPass, deviceCode);
+			// Don't disconnect yet — we need serial for router_info
+			step = 'router';
+			// fetch router info while still on USB
+			const info = await routerInfo();
+			routerBssid = info.bssid;
+			routerIp = info.ip;
+			routerVendor = ouiLookup(info.bssid);
+		} catch (e) {
+			error = e instanceof Error ? e.message : t.onboarding.errProvision;
+		} finally {
+			busy = false;
+		}
+	}
+
+	async function handleRouterDone() {
+		busy = true;
+		try {
 			await disconnectSerial();
 			if (typeof localStorage !== 'undefined') {
 				localStorage.setItem(STORAGE_KEYS.sticker, deviceCode);
 			}
 			step = 'done';
 		} catch (e) {
-			error = e instanceof Error ? e.message : t.onboarding.errProvision;
+			error = e instanceof Error ? e.message : t.onboarding.errSerial;
 		} finally {
 			busy = false;
 		}
@@ -187,10 +308,52 @@
 				<p class="gate-sub">{t.onboarding.stepWifiBody}</p>
 			</div>
 			<form class="panel" onsubmit={handleProvision}>
-				<label class="field">
-					<span class="field-label">{t.onboarding.wifiSsid}</span>
-					<input class="field-input" type="text" bind:value={ssid} autocomplete="off" required />
-				</label>
+				{#if !manualSsid}
+					<label class="field">
+						<span class="field-label">{t.onboarding.wifiSsid}</span>
+						{#if scanBusy}
+							<p class="gate-hint">{t.onboarding.scanning}</p>
+						{:else if networks.length === 0}
+							<p class="gate-hint">{t.onboarding.noNetworks}</p>
+						{:else}
+							<select class="field-input" bind:value={ssid} required>
+								{#each networks as net (net.bssid)}
+									<option value={net.ssid}>
+										{net.ssid}
+										{#if net.rssi > -50}
+											 (strong)
+										{:else if net.rssi > -70}
+											 (fair)
+										{:else}
+											 (weak)
+										{/if}
+									</option>
+								{/each}
+							</select>
+						{/if}
+					</label>
+					<p class="gate-hint">
+						<button type="button" class="text-btn" onclick={() => manualSsid = true}>
+							{t.onboarding.wifiManual}
+						</button>
+						{#if !scanBusy && networks.length === 0}
+							<span class="sep">·</span>
+							<button type="button" class="text-btn" onclick={loadNetworks}>
+								{t.onboarding.wifiRescan}
+							</button>
+						{/if}
+					</p>
+				{:else}
+					<label class="field">
+						<span class="field-label">{t.onboarding.wifiSsid}</span>
+						<input class="field-input" type="text" bind:value={ssid} autocomplete="off" required />
+					</label>
+					<p class="gate-hint">
+						<button type="button" class="text-btn" onclick={() => manualSsid = false}>
+							{t.onboarding.wifiPickFromList}
+						</button>
+					</p>
+				{/if}
 				<label class="field">
 					<span class="field-label">{t.onboarding.wifiPass}</span>
 					<div class="password-row">
@@ -218,12 +381,44 @@
 				{/if}
 				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
 			</form>
+		{:else if step === 'router'}
+			<div class="gate-head">
+				<h1 class="gate-title" id="gate-title">{t.onboarding.stepRouterTitle}</h1>
+				<p class="gate-sub">{t.onboarding.stepRouterBody}</p>
+			</div>
+			<div class="panel">
+				{#if routerVendor}
+					<p class="router-badge">{routerVendor}</p>
+				{/if}
+				<p class="router-ip">{t.onboarding.knownIp} <span class="mono">{routerIp || '—'}</span></p>
+				<div class="router-instructions">
+					<p>{dnsInstructions(routerVendor, routerIp)}</p>
+				</div>
+				<p class="gate-hint">{t.onboarding.routerHint}</p>
+				<button class="gate-submit" onclick={handleRouterDone} disabled={busy}>
+					{busy ? t.onboarding.saving : t.onboarding.routerDoneBtn}
+				</button>
+				<p class="gate-help">
+					<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
+						{#if showHelp}
+							<X size={18} />
+						{:else}
+							<CircleHelp size={18} />
+						{/if}
+						{showHelp ? t.onboarding.helpClose : t.onboarding.helpOpen}
+					</button>
+				</p>
+				{#if showHelp}
+					<p class="help-panel">{t.onboarding.routerHelp}<br/><br/>{t.onboarding.routerHelpList}</p>
+				{/if}
+				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
+			</div>
 		{:else}
 			<div class="gate-head">
 				<h1 class="gate-title" id="gate-title">{t.onboarding.stepDoneTitle}</h1>
 				<p class="gate-sub">{t.onboarding.stepDoneBody}</p>
 				<p class="gate-sub dashboard-hint">
-					{t.onboarding.stepDoneDashboard} 
+					{t.onboarding.stepDoneDashboard}
 					<button type="button" class="copy-url-btn" onclick={copyUrl}>
 						{t.onboarding.stepDoneUrl}
 					</button>
@@ -364,6 +559,13 @@
 	.field-input.mono {
 		letter-spacing: 0.08em;
 	}
+	select.field-input {
+		appearance: none;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+		background-repeat: no-repeat;
+		background-position: right 14px center;
+		padding-right: 36px;
+	}
 	.password-row {
 		display: flex;
 		gap: 8px;
@@ -386,6 +588,24 @@
 		background: rgba(255, 255, 255, 0.09);
 	}
 
+	.text-btn {
+		background: none;
+		border: none;
+		color: var(--paper-mute);
+		font-size: 12.5px;
+		cursor: pointer;
+		padding: 0;
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+	.text-btn:hover {
+		color: var(--paper-soft);
+	}
+	.sep {
+		color: var(--paper-mute);
+		margin: 0 6px;
+	}
+
 	.gate-error {
 		min-height: 18px;
 		font-size: 12.5px;
@@ -395,6 +615,7 @@
 
 	.toggle-pass:focus-visible,
 	.help-btn:focus-visible,
+	.text-btn:focus-visible,
 	.copy-url-btn:focus-visible,
 	.gate-submit:focus-visible {
 		outline: 2px solid var(--paper-soft);
@@ -455,18 +676,6 @@
 		opacity: 1;
 		background: rgba(255, 255, 255, 0.05);
 	}
-	.help-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 16px;
-		height: 16px;
-		border: 1px solid currentColor;
-		border-radius: 50%;
-		font-size: 10px;
-		font-style: italic;
-		margin-right: 4px;
-	}
 	.help-panel {
 		font-size: 12px;
 		line-height: 1.5;
@@ -475,6 +684,35 @@
 		padding: 10px 12px;
 		border-radius: var(--r-sm);
 		margin-top: 4px;
+	}
+
+	/* Router step */
+	.router-badge {
+		font-size: 13px;
+		color: var(--paper);
+		background: rgba(255, 255, 255, 0.08);
+		padding: 6px 12px;
+		border-radius: var(--r-pill);
+		display: inline-block;
+		align-self: center;
+	}
+	.router-ip {
+		font-size: 14px;
+		color: var(--paper-soft);
+	}
+	.router-ip .mono {
+		font-family: 'Space Mono', monospace;
+		letter-spacing: 0.02em;
+		color: var(--paper);
+	}
+	.router-instructions {
+		font-size: 13.5px;
+		line-height: 1.6;
+		color: var(--paper-soft);
+		background: rgba(255, 255, 255, 0.05);
+		padding: 12px 14px;
+		border-radius: var(--r-sm);
+		text-align: left;
 	}
 
 	.done-panel {
@@ -520,13 +758,5 @@
 		margin-left: 8px;
 		font-size: 12px;
 		color: oklch(0.55 0.14 145);
-	}
-	.dashboard-link {
-		color: var(--paper);
-		text-decoration: underline;
-		text-underline-offset: 3px;
-	}
-	.dashboard-link:hover {
-		opacity: 0.82;
 	}
 </style>
