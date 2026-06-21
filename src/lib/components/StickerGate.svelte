@@ -1,23 +1,24 @@
 <script lang="ts">
 	import { t } from '$lib/i18n';
-	import { STICKER_RE, STORAGE_KEYS } from '$lib/config';
+	import { STORAGE_KEYS } from '$lib/config';
 	import {
 		isSerialSupported,
 		connectSerial,
 		disconnectSerial,
 		identifyDevice,
+		challengeDevice,
 		provisionDevice,
 		scanNetworks,
 		routerInfo,
 		type WifiNetwork
 	} from '$lib/serial';
-	import { activateSticker } from '$lib/api/client';
+	import { authenticateDevice } from '$lib/crypto';
 	import { base } from '$app/paths';
 	import { CircleHelp, X } from '@lucide/svelte';
 
 	// USB WebSerial provisioning:
-	//   connect -> activate (cloud) -> wifi -> provision (serial) -> router -> done
-	type Step = 'connect' | 'confirm' | 'wifi' | 'router' | 'done';
+	//   connect -> verify (local crypto) -> wifi -> provision (serial) -> router -> done
+	type Step = 'connect' | 'verify' | 'wifi' | 'router' | 'done';
 	let step = $state<Step>('connect');
 
 	let supported = isSerialSupported();
@@ -25,7 +26,7 @@
 	let error = $state('');
 	let showHelp = $state(false);
 
-	let deviceCode = $state('');
+	let deviceSerial = $state('');
 	let ssid = $state('');
 	let wifiPass = $state('');
 	let showWifiPass = $state(false);
@@ -39,7 +40,7 @@
 	let routerIp = $state('');
 	let routerVendor = $state('');
 
-	let codeValid = $derived(STICKER_RE.test(deviceCode.trim().toUpperCase()));
+	let verifyError = $state('');
 
 	async function copyUrl() {
 		try {
@@ -57,10 +58,15 @@
 		try {
 			await connectSerial();
 			const id = await identifyDevice();
-			if (id.code) {
-				deviceCode = id.code;
+			if (id.serial) {
+				deviceSerial = id.serial;
 			}
-			step = 'confirm';
+			if (!id.has_keys) {
+				error = t.onboarding.errNoKeys;
+				await disconnectSerial();
+				return;
+			}
+			step = 'verify';
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : String(e);
 			if (msg.includes('bad_json')) error = t.onboarding.errSerial;
@@ -72,29 +78,49 @@
 		}
 	}
 
-	async function handleActivate() {
-		const code = deviceCode.trim().toUpperCase();
-		if (!STICKER_RE.test(code)) {
-			error = t.onboarding.errNoCode;
-			return;
-		}
+	async function handleVerify() {
 		error = '';
+		verifyError = '';
 		busy = true;
 		try {
-			const result = await activateSticker(code);
-			if (result.status !== 'ok') {
-				error = t.onboarding.errActivate;
+			console.log('[ui] handleVerify: starting authentication');
+			const result = await authenticateDevice(async (nonce) => {
+				console.log('[ui] handleVerify: sending challenge with nonce', nonce.slice(0, 16) + '...');
+				const r = await challengeDevice(nonce);
+				console.log('[ui] handleVerify: challenge response received, cert hex length:', r.cert.length, 'sig hex length:', r.signature.length);
+				return {
+					serial: r.serial,
+					cert: hexToBytes(r.cert),
+					signature: hexToBytes(r.signature)
+				};
+			});
+
+			console.log('[ui] handleVerify: authenticateDevice returned, verified:', result.verified);
+			if (!result.verified) {
+				error = t.onboarding.errVerify;
+				await disconnectSerial();
+				step = 'connect';
 				return;
 			}
-			deviceCode = code;
+
+			deviceSerial = result.serial ?? '';
 			step = 'wifi';
-			// kick off network scan immediately
 			loadNetworks();
-		} catch (e) {
-			error = e instanceof Error ? e.message : t.onboarding.errActivate;
-		} finally {
+			} catch (e) {
+			error = e instanceof Error ? e.message : t.onboarding.errVerify;
+			await disconnectSerial();
+			step = 'connect';
+			} finally {
 			busy = false;
 		}
+	}
+
+	function hexToBytes(hex: string): Uint8Array {
+		const bytes = new Uint8Array(hex.length / 2);
+		for (let i = 0; i < hex.length; i += 2) {
+			bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+		}
+		return bytes;
 	}
 
 	async function loadNetworks() {
@@ -194,7 +220,7 @@
 		error = '';
 		busy = true;
 		try {
-			await provisionDevice(ssid.trim(), wifiPass, deviceCode);
+			await provisionDevice(ssid.trim(), wifiPass);
 			// Don't disconnect yet — we need serial for router_info
 			step = 'router';
 			// fetch router info while still on USB
@@ -214,7 +240,7 @@
 		try {
 			await disconnectSerial();
 			if (typeof localStorage !== 'undefined') {
-				localStorage.setItem(STORAGE_KEYS.sticker, deviceCode);
+				localStorage.setItem(STORAGE_KEYS.sticker, deviceSerial);
 			}
 			step = 'done';
 		} catch (e) {
@@ -265,43 +291,32 @@
 					<p class="help-panel">{t.onboarding.connectHelp}</p>
 				{/if}
 			</div>
-		{:else if step === 'confirm'}
-			<div class="gate-head">
-				<h1 class="gate-title" id="gate-title">{t.onboarding.stepConfirmTitle}</h1>
-				<p class="gate-sub">{t.onboarding.stepConfirmBody}</p>
-			</div>
-			<div class="panel">
-				<label class="field">
-					<span class="field-label">{t.onboarding.codeLabel}</span>
-					<input
-						class="field-input mono"
-						type="text"
-						bind:value={deviceCode}
-						placeholder="KNOWN-XXXX-XXXX"
-						autocomplete="off"
-						autocapitalize="characters"
-						spellcheck="false"
-					/>
-				</label>
-				<p class="gate-hint">{t.onboarding.codeHint}</p>
-				<p class="gate-help">
-					<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
-						{#if showHelp}
-							<X size={18} />
-						{:else}
-							<CircleHelp size={18} />
-						{/if}
-						{showHelp ? t.onboarding.helpClose : t.onboarding.helpOpen}
-					</button>
-				</p>
-				{#if showHelp}
-					<p class="help-panel">{t.onboarding.codeHelp}<br/><br/>{t.onboarding.codeHelpList}</p>
-				{/if}
-				<button class="gate-submit" onclick={handleActivate} disabled={busy || !codeValid}>
-					{busy ? t.onboarding.activating : t.onboarding.activateBtn}
+		{:else if step === 'verify'}
+		<div class="gate-head">
+			<h1 class="gate-title" id="gate-title">{t.onboarding.stepVerifyTitle}</h1>
+			<p class="gate-sub">{t.onboarding.stepVerifyBody}</p>
+		</div>
+		<div class="panel">
+			<p class="gate-hint mono">{deviceSerial || '—'}</p>
+			<p class="gate-hint">{t.onboarding.verifyHint}</p>
+			<p class="gate-help">
+				<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
+					{#if showHelp}
+						<X size={18} />
+					{:else}
+						<CircleHelp size={18} />
+					{/if}
+					{showHelp ? t.onboarding.helpClose : t.onboarding.helpOpen}
 				</button>
-				<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
-			</div>
+			</p>
+			{#if showHelp}
+				<p class="help-panel">{t.onboarding.verifyHelp}</p>
+			{/if}
+			<button class="gate-submit" onclick={handleVerify} disabled={busy}>
+				{busy ? t.onboarding.verifying : t.onboarding.verifyBtn}
+			</button>
+			<p class="gate-error" role="alert" aria-live="assertive">{error}</p>
+		</div>
 		{:else if step === 'wifi'}
 			<div class="gate-head">
 				<h1 class="gate-title" id="gate-title">{t.onboarding.stepWifiTitle}</h1>
@@ -555,9 +570,6 @@
 		border-color: var(--paper-soft);
 		background: rgba(255, 255, 255, 0.09);
 		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
-	}
-	.field-input.mono {
-		letter-spacing: 0.08em;
 	}
 	select.field-input {
 		appearance: none;

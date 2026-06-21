@@ -1,4 +1,5 @@
 // Pure client app, no SSR. Onboarding runs in the browser and talks to the
-// device over USB (WebSerial) and to the activation backend over HTTP.
+// device over USB (WebSerial). No network calls — device verification is
+// fully offline via cryptographic challenge-response.
 export const ssr = false;
 export const prerender = false;

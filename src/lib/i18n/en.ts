@@ -27,17 +27,16 @@ export const en = {
 			"Talk to your Known over USB to set up Wi-Fi. Nothing leaves your computer.",
 		connectHelpList:
 			'Try a different USB cable. Try a different USB port. Unplug Known, wait 5 seconds, plug it back in.',
-		stepConfirmTitle: 'Activate your device',
-		stepConfirmBody:
-			"This code was read from your Known. Check it matches the sticker that came with it. Then activate.",
-		codeHint: "This code is on the sticker that came with your Known. Double-check it matches.",
-		codeLabel: 'Device code',
-		codeHelp:
-			"If the code does not match the sticker, reconnect your Known and try again. The sticker came with the device.",
-		codeHelpList:
-			'Reconnect the device. Check the sticker that came with Known. Try a different USB cable.',
-		activateBtn: 'Activate',
-		activating: 'Activating…',
+		stepVerifyTitle: 'Verify your device',
+		stepVerifyBody:
+			"Your Known is checking its own identity. No server, no account — the device proves it's real using a cryptographic key stored on the chip.",
+		verifyHint: "This takes a few seconds. The device signs a challenge with its private key.",
+		verifyBtn: 'Verify device',
+		verifying: 'Verifying…',
+		verifyHelp:
+			"Known has a unique key burned into its chip at manufacturing. Your browser verifies the signature locally — nothing is sent to any server.",
+		errVerify: 'Could not verify this device. It may not be a genuine Known. Reconnect and try again.',
+		errNoKeys: 'This device has no cryptographic keys. It may not be a genuine Known.',
 		helpOpen: 'What does this do?',
 		helpClose: 'Close',
 		wifiHelp:
@@ -55,9 +54,7 @@ export const en = {
 		wifiManual: 'Type network name manually',
 		wifiPickFromList: 'Pick from list',
 		wifiRescan: 'Rescan',
-		errActivate: 'Could not activate this code. It may already be claimed.',
 		errProvision: 'Could not save settings to your device. Reconnect and try again.',
-		errNoCode: 'Your Known did not report a code. Reconnect and try again.',
 		errScan: 'Wi-Fi scan failed. You can still type the network name manually.',
 		errSerial:
 			'Could not reach your Known. Unplug it. Wait five seconds. Plug it back in. Try again.',

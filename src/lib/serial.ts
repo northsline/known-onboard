@@ -6,8 +6,8 @@
 import { SERIAL_BAUD, SERIAL_FILTERS } from '$lib/config';
 
 export interface IdentifyResult {
-	code: string | null;
-	device_id: string | null;
+	serial: string | null;
+	has_keys: boolean;
 }
 
 export interface SerialResponse {
@@ -20,11 +20,13 @@ let port: SerialPort | null = null;
 let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
 let writer: WritableStreamDefaultWriter<Uint8Array> | null = null;
 let rxBuffer = '';
+let readLoopPromise: Promise<void> | null = null;
+let keepReading = false;
 
 const encoder = new TextEncoder();
-const decoder = new TextDecoder();
+let decoder = new TextDecoder();
 
-const BOOT_DELAY_MS = 3000;
+const BOOT_DELAY_MS = 3500;
 const IDENTIFY_TIMEOUT_MS = 25000;
 
 function sleep(ms: number): Promise<void> {
@@ -35,29 +37,30 @@ export function isSerialSupported(): boolean {
 	return typeof navigator !== 'undefined' && 'serial' in navigator;
 }
 
-async function readChunk(timeoutMs: number): Promise<Uint8Array | null> {
-	if (!reader) throw new Error('Serial port is not open.');
-
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	try {
-		return await Promise.race([
-			reader.read().then(({ value, done }) => {
-				if (done) throw new Error('Serial connection closed by the device.');
-				return value ?? null;
-			}),
-			new Promise<null>((resolve) => {
-				timer = setTimeout(() => resolve(null), timeoutMs);
-			})
-		]);
-	} finally {
-		if (timer !== undefined) clearTimeout(timer);
+/** Background read loop: push every byte from the port into rxBuffer.
+ *  WebSerial readers only allow one concurrent read(), so this single loop
+ *  owns the reader and line parsing polls the buffer instead of racing reads.
+ */
+async function readLoop(): Promise<void> {
+	while (keepReading && reader) {
+		try {
+			const { value, done } = await reader.read();
+			if (done) {
+				console.log('[serial] readLoop: stream done');
+				break;
+			}
+			if (value && value.length > 0) {
+				rxBuffer += decoder.decode(value, { stream: true });
+			}
+		} catch (e) {
+			console.log('[serial] readLoop: error:', e);
+			break;
+		}
 	}
 }
 
 /** Read one line, waiting up to timeoutMs. Keeps partial data in rxBuffer. */
 async function readLine(timeoutMs: number): Promise<string | null> {
-	if (!reader) throw new Error('Serial port is not open.');
-
 	const deadline = Date.now() + timeoutMs;
 	while (Date.now() < deadline) {
 		const nl = rxBuffer.indexOf('\n');
@@ -67,12 +70,7 @@ async function readLine(timeoutMs: number): Promise<string | null> {
 			if (line) return line;
 			continue;
 		}
-
-		const remaining = deadline - Date.now();
-		if (remaining <= 0) break;
-
-		const chunk = await readChunk(Math.min(remaining, 300));
-		if (chunk) rxBuffer += decoder.decode(chunk, { stream: true });
+		await sleep(50);
 	}
 	return null;
 }
@@ -87,18 +85,41 @@ function parseResponse(line: string): SerialResponse | null {
 	return null;
 }
 
-/** Wait for boot + firmware ready beacon after the port open reboots the Pico. */
+/** Wait for boot + firmware ready beacon after the port open reboots the Pico.
+ *  Throws if the ready beacon is not seen in time so the caller can reconnect.
+ */
 async function waitForDeviceReady(): Promise<void> {
+	console.log('[serial] waitForDeviceReady: sleeping BOOT_DELAY_MS=' + BOOT_DELAY_MS);
 	await sleep(BOOT_DELAY_MS);
+	console.log('[serial] waitForDeviceReady: now listening for ready beacon (12s timeout)');
 
 	const deadline = Date.now() + 12000;
+	let bytesRead = 0;
 	while (Date.now() < deadline) {
-		const line = await readLine(500);
-		if (!line) continue;
+		const remaining = Math.min(500, deadline - Date.now());
+		if (remaining <= 0) break;
+		const line = await readLine(remaining);
+		if (!line) {
+			// No newline yet — check if any bytes at all are arriving.
+			if (rxBuffer.length > bytesRead) {
+				bytesRead = rxBuffer.length;
+				console.log('[serial] waitForDeviceReady: bytes arriving, buffer=', JSON.stringify(rxBuffer.slice(-40)));
+			}
+			continue;
+		}
+		console.log('[serial] waitForDeviceReady: got line:', line);
 		const res = parseResponse(line);
-		if (res?.status === 'ready') return;
-		if (line.includes('Waiting for USB setup')) return;
+		if (res?.status === 'ready') {
+			console.log('[serial] waitForDeviceReady: ready beacon found');
+			return;
+		}
+		if (line.includes('Waiting for USB setup')) {
+			console.log('[serial] waitForDeviceReady: found waiting text');
+			return;
+		}
 	}
+	console.error('[serial] waitForDeviceReady: TIMED OUT after 12s, no ready beacon');
+	throw new Error('The device did not become ready over USB. Unplug it and try again.');
 }
 
 export async function connectSerial(): Promise<void> {
@@ -106,8 +127,11 @@ export async function connectSerial(): Promise<void> {
 		throw new Error('WebSerial is not supported. Use Chrome or Edge to set up your Known.');
 	}
 
+	console.log('[serial] connectSerial: requesting port');
 	port = await navigator.serial.requestPort({ filters: SERIAL_FILTERS });
+	console.log('[serial] connectSerial: opening port at ' + SERIAL_BAUD);
 	await port.open({ baudRate: SERIAL_BAUD });
+	console.log('[serial] connectSerial: port opened');
 
 	if (!port.readable || !port.writable) {
 		throw new Error('Serial port opened without read/write streams.');
@@ -116,13 +140,25 @@ export async function connectSerial(): Promise<void> {
 	reader = port.readable.getReader();
 	writer = port.writable.getWriter();
 	rxBuffer = '';
+	decoder = new TextDecoder();
+	keepReading = true;
+	readLoopPromise = readLoop();
 
+	console.log('[serial] connectSerial: calling waitForDeviceReady');
 	await waitForDeviceReady();
+	console.log('[serial] connectSerial: ready, proceeding');
 }
 
 export async function disconnectSerial(): Promise<void> {
+	console.log('[serial] disconnectSerial: closing');
+	keepReading = false;
 	try {
 		await reader?.cancel();
+	} catch {
+		// ignore
+	}
+	try {
+		await readLoopPromise;
 	} catch {
 		// ignore
 	}
@@ -137,6 +173,8 @@ export async function disconnectSerial(): Promise<void> {
 	writer = null;
 	port = null;
 	rxBuffer = '';
+	decoder = new TextDecoder();
+	readLoopPromise = null;
 }
 
 export async function sendCommand(cmd: object): Promise<void> {
@@ -148,8 +186,8 @@ export async function sendCommand(cmd: object): Promise<void> {
 export async function readResponse(timeoutMs = 8000): Promise<SerialResponse> {
 	const deadline = Date.now() + timeoutMs;
 	while (Date.now() < deadline) {
-		const remaining = deadline - Date.now();
-		const line = await readLine(Math.max(remaining, 200));
+		const remaining = Math.max(deadline - Date.now(), 50);
+		const line = await readLine(remaining);
 		if (!line) continue;
 		const res = parseResponse(line);
 		if (res && res.status !== 'ready') return res;
@@ -162,20 +200,22 @@ export async function identifyDevice(): Promise<IdentifyResult> {
 	let lastReason = 'unknown error';
 
 	while (Date.now() < deadline) {
+		console.log('[serial] identifyDevice: sending identify command');
 		await sendCommand({ cmd: 'identify' });
 
 		try {
 			const res = await readResponse(4000);
+			console.log('[serial] identifyDevice: got response:', JSON.stringify(res));
 			if (res.status === 'ok') {
 				return {
-					code: (res.code as string) ?? null,
-					device_id: (res.device_id as string) ?? null
+					serial: (res.serial as string) ?? null,
+					has_keys: (res.has_keys as boolean) ?? false
 				};
 			}
 			lastReason = res.reason ?? 'unknown error';
 			if (res.reason !== 'bad_json') break;
-		} catch {
-			// keep retrying until IDENTIFY_TIMEOUT_MS
+		} catch (e) {
+			console.log('[serial] identifyDevice: readResponse threw:', e);
 		}
 
 		await sleep(800);
@@ -184,12 +224,30 @@ export async function identifyDevice(): Promise<IdentifyResult> {
 	throw new Error(`Device identify failed: ${lastReason}`);
 }
 
+export interface ChallengeResult {
+	serial: string;
+	cert: string;       // hex-encoded certificate bytes
+	signature: string;  // hex-encoded DER signature
+}
+
+export async function challengeDevice(nonceHex: string): Promise<ChallengeResult> {
+	await sendCommand({ cmd: 'challenge', nonce: nonceHex });
+	const res = await readResponse(30000); // signing takes 2-5s on RP2350
+	if (res.status !== 'ok') {
+		throw new Error(`Challenge failed: ${res.reason ?? 'unknown error'}`);
+	}
+	return {
+		serial: (res.serial as string) ?? '',
+		cert: (res.cert as string) ?? '',
+		signature: (res.signature as string) ?? ''
+	};
+}
+
 export async function provisionDevice(
 	ssid: string,
-	pass: string,
-	code: string
+	pass: string
 ): Promise<SerialResponse> {
-	await sendCommand({ cmd: 'provision', ssid, pass, code });
+	await sendCommand({ cmd: 'provision', ssid, pass });
 	const res = await readResponse(15000);
 	if (res.status !== 'ok') {
 		throw new Error(`Provisioning failed: ${res.reason ?? 'unknown error'}`);

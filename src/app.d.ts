@@ -2,14 +2,6 @@
 declare global {
 	namespace App {}
 
-	// Custom Vite env vars (see src/lib/config.ts).
-	interface ImportMetaEnv {
-		readonly VITE_API_BASE_URL?: string;
-	}
-	interface ImportMeta {
-		readonly env: ImportMetaEnv;
-	}
-
 	// --- Minimal WebSerial API typings (Chrome/Edge only) ---
 	// We declare just the surface src/lib/serial.ts uses, so we don't depend on
 	// @types/w3c-web-serial. https://wicg.github.io/serial/
