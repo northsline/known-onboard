@@ -10,6 +10,7 @@ Known device:
    the device is genuine, using a key burned into the chip at manufacturing.
    No server, no account, no network call.
 3. Write your Wi-Fi credentials to the device over the serial port.
+4. Configure your router to point DNS to the device (instructions shown in-app).
 
 After that, you unplug the device, plug it into a wall adapter, and use the
 [Known Dashboard](https://github.com/northsline/known-dashboard) to monitor
