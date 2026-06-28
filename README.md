@@ -6,7 +6,7 @@ This is a small, hosted PWA that runs once, in your browser, to provision a new
 Known device:
 
 1. Connect the device over USB.
-2. Verify the device identity — a cryptographic challenge-response proves
+2. Verify the device identity. A cryptographic challenge-response proves
    the device is genuine, using a key burned into the chip at manufacturing.
    No server, no account, no network call.
 3. Write your Wi-Fi credentials to the device over the serial port.

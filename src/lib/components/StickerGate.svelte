@@ -221,7 +221,7 @@
 		busy = true;
 		try {
 			await provisionDevice(ssid.trim(), wifiPass);
-			// Don't disconnect yet — we need serial for router_info
+			// Don't disconnect yet. We need serial for router_info
 			step = 'router';
 			// fetch router info while still on USB
 			const info = await routerInfo();
@@ -297,7 +297,7 @@
 			<p class="gate-sub">{t.onboarding.stepVerifyBody}</p>
 		</div>
 		<div class="panel">
-			<p class="gate-hint mono">{deviceSerial || '—'}</p>
+			<p class="gate-hint mono">{deviceSerial || '-'}</p>
 			<p class="gate-hint">{t.onboarding.verifyHint}</p>
 			<p class="gate-help">
 				<button type="button" class="help-btn" onclick={() => showHelp = !showHelp}>
@@ -405,7 +405,7 @@
 				{#if routerVendor}
 					<p class="router-badge">{routerVendor}</p>
 				{/if}
-				<p class="router-ip">{t.onboarding.knownIp} <span class="mono">{routerIp || '—'}</span></p>
+				<p class="router-ip">{t.onboarding.knownIp} <span class="mono">{routerIp || '-'}</span></p>
 				<div class="router-instructions">
 					<p>{dnsInstructions(routerVendor, routerIp)}</p>
 				</div>

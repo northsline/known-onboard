@@ -4,7 +4,7 @@ declare global {
 
 	// --- Minimal WebSerial API typings (Chrome/Edge only) ---
 	// We declare just the surface src/lib/serial.ts uses, so we don't depend on
-	// @types/w3c-web-serial. https://wicg.github.io/serial/
+	// @types/w3c-web-serial. Https://wicg.github.io/serial/
 	interface SerialPortFilter {
 		usbVendorId?: number;
 		usbProductId?: number;

@@ -1,9 +1,7 @@
 // WebSerial provisioning client.
 //
 // Talks to the Pico over a USB CDC/ACM serial port using a line-delimited JSON
-// protocol (see lib/provisioning.py on the firmware side).
-
-import { SERIAL_BAUD, SERIAL_FILTERS } from '$lib/config';
+// protocol (see lib/provisioning.py on the firmware side). Import { SERIAL_BAUD, SERIAL_FILTERS } from '$lib/config';
 
 export interface IdentifyResult {
 	serial: string | null;
@@ -100,8 +98,7 @@ async function waitForDeviceReady(): Promise<void> {
 		if (remaining <= 0) break;
 		const line = await readLine(remaining);
 		if (!line) {
-			// No newline yet — check if any bytes at all are arriving.
-			if (rxBuffer.length > bytesRead) {
+			// No newline yet. Check if any bytes at all are arriving. If (rxBuffer.length > bytesRead) {
 				bytesRead = rxBuffer.length;
 				console.log('[serial] waitForDeviceReady: bytes arriving, buffer=', JSON.stringify(rxBuffer.slice(-40)));
 			}

@@ -1,4 +1,4 @@
-// Lightweight i18n with no external dependency. v1 is English-only; the
+// Lightweight i18n with no external dependency. V1 is English-only; the
 // Dict-typed structure makes it straightforward to add a second locale later
 // without touching components.
 //
@@ -10,10 +10,8 @@ import { en, type Dict } from './en';
 
 export type { Dict };
 
-// Registry of available locales. Add new ones here once translated.
-const locales: Record<string, Dict> = { en };
+// Registry of available locales. Add new ones here once translated. Const locales: Record<string, Dict> = { en };
 
-// Active locale. Hardcoded to English for v1.
-export const activeLocale = 'en';
+// Active locale. Hardcoded to English for v1. Export const activeLocale = 'en';
 
 export const t: Dict = locales[activeLocale] ?? en;

@@ -1,8 +1,6 @@
 // English strings, the canonical dictionary. Its shape is the `Dict` type.
 // v1 is English-only; add a second locale by satisfying `Dict` and registering
-// it in index.ts.
-
-export const en = {
+// it in index.ts. Export const en = {
 	locale: 'en',
 
 	app: {
@@ -22,19 +20,19 @@ export const en = {
 		stepConnectBody: 'Plug Known into this computer with the USB cable, then press connect.',
 		connectBtn: 'Connect device',
 		connecting: 'Connecting…',
-		connectingHint: 'Your Known is rebooting — this can take up to 10 seconds.',
+		connectingHint: 'Your Known is rebooting. This can take up to 10 seconds.',
 		connectHelp:
 			"Talk to your Known over USB to set up Wi-Fi. Nothing leaves your computer.",
 		connectHelpList:
 			'Try a different USB cable. Try a different USB port. Unplug Known, wait 5 seconds, plug it back in.',
 		stepVerifyTitle: 'Verify your device',
 		stepVerifyBody:
-			"Your Known is checking its own identity. No server, no account — the device proves it's real using a cryptographic key stored on the chip.",
+			"Your Known is checking its own identity. No server, no account. The device proves it's real using a cryptographic key stored on the chip.",
 		verifyHint: "This takes a few seconds. The device signs a challenge with its private key.",
 		verifyBtn: 'Verify device',
 		verifying: 'Verifying…',
 		verifyHelp:
-			"Known has a unique key burned into its chip at manufacturing. Your browser verifies the signature locally — nothing is sent to any server.",
+			"Known has a unique key burned into its chip at manufacturing. Your browser verifies the signature locally. Nothing is sent to any server.",
 		errVerify: 'Could not verify this device. It may not be a genuine Known. Reconnect and try again.',
 		errNoKeys: 'This device has no cryptographic keys. It may not be a genuine Known.',
 		helpOpen: 'What does this do?',
@@ -66,7 +64,7 @@ export const en = {
 		stepRouterBody: 'This step matters. Your router needs to send DNS traffic to Known. That is how Known sees your network.',
 		knownIp: 'Known IP on your network:',
 		routerHint: "Log into your router at the address below. Find the DNS or DHCP settings. Set the primary DNS server to the IP shown above.",
-		routerDoneBtn: 'Done — unplug Known',
+		routerDoneBtn: 'Done. Unplug Known',
 		saving: 'Finishing setup…',
 		routerHelp:
 			'Known needs to be your network\'s DNS server to monitor traffic. Most routers let you set a custom DNS in the DHCP or WAN settings.',
