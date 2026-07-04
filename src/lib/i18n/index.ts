@@ -10,8 +10,10 @@ import { en, type Dict } from './en';
 
 export type { Dict };
 
-// Registry of available locales. Add new ones here once translated. Const locales: Record<string, Dict> = { en };
+// Registry of available locales. Add new ones here once translated.
+const locales: Record<string, Dict> = { en };
 
-// Active locale. Hardcoded to English for v1. Export const activeLocale = 'en';
+// Active locale. Hardcoded to English for v1.
+export const activeLocale = 'en';
 
 export const t: Dict = locales[activeLocale] ?? en;

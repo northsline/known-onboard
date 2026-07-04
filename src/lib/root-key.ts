@@ -13,7 +13,8 @@
 //
 // PLACEHOLDER: This key will be replaced by the real root public key
 // when you run manufacturing/keygen.py for the first time.
-// The keygen script will output the JWK to paste here. Export const ROOT_PUBLIC_KEY_JWK: JsonWebKey = {
+// The keygen script will output the JWK to paste here.
+export const ROOT_PUBLIC_KEY_JWK: JsonWebKey = {
 	kty: 'EC',
 	crv: 'P-256',
 	x: 'mRq6R6voBrIXRvzrm1JzdMVp0M14-_AiXsZxhAn0udQ',

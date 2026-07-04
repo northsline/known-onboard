@@ -1,6 +1,7 @@
 // English strings, the canonical dictionary. Its shape is the `Dict` type.
 // v1 is English-only; add a second locale by satisfying `Dict` and registering
-// it in index.ts. Export const en = {
+// it in index.ts.
+export const en = {
 	locale: 'en',
 
 	app: {
@@ -10,24 +11,24 @@
 	},
 
 	onboarding: {
-		welcome: 'Set up your Known.',
+		welcome: 'Set up Known.',
 		welcomeDetail:
-			"Set up Known over USB. Your browser asks which port to use. Pick the one that says Raspberry Pi.",
-		hint: 'If this button does nothing, try Chrome or Edge.',
+			"Set up Known over USB. Your browser will ask which port to use — pick the one that says Raspberry Pi.",
+		hint: 'Nothing happens? Try Chrome or Edge.',
 		// USB WebSerial provisioning flow
 		unsupported: 'This browser cannot set up Known. Try Chrome (google.com/chrome) or Edge (microsoft.com/edge).',
 		stepConnectTitle: 'Connect your Known',
-		stepConnectBody: 'Plug Known into this computer with the USB cable, then press connect.',
+		stepConnectBody: 'Plug Known into this computer, then press Connect.',
 		connectBtn: 'Connect device',
 		connecting: 'Connecting…',
-		connectingHint: 'Your Known is rebooting. This can take up to 10 seconds.',
+		connectingHint: 'Known is waking up. This can take up to 10 seconds.',
 		connectHelp:
 			"Talk to your Known over USB to set up Wi-Fi. Nothing leaves your computer.",
 		connectHelpList:
 			'Try a different USB cable. Try a different USB port. Unplug Known, wait 5 seconds, plug it back in.',
 		stepVerifyTitle: 'Verify your device',
 		stepVerifyBody:
-			"Your Known is checking its own identity. No server, no account. The device proves it's real using a cryptographic key stored on the chip.",
+			"Known is checking its own identity. No server, no account. The device proves it's real using a key stored on the chip.",
 		verifyHint: "This takes a few seconds. The device signs a challenge with its private key.",
 		verifyBtn: 'Verify device',
 		verifying: 'Verifying…',
@@ -45,7 +46,7 @@
 		stepWifiBody: 'Known joins this network when you unplug it from your PC.',
 		wifiSsid: 'Network name (SSID)',
 		wifiPass: 'Wi-Fi password',
-		provisionBtn: 'Provision device',
+		provisionBtn: 'Save settings',
 		provisioning: 'Saving to device…',
 		scanning: 'Scanning for networks…',
 		noNetworks: 'No networks found. Try manual entry or rescan.',
@@ -60,10 +61,10 @@
 			'Your Known did not respond. Unplug it. Wait a moment. Plug it back in. Try again.',
 
 		// Router step
-		stepRouterTitle: 'Point your router at Known',
-		stepRouterBody: 'This step matters. Your router needs to send DNS traffic to Known. That is how Known sees your network.',
+		stepRouterTitle: 'Use Known as your DNS',
+		stepRouterBody: 'This step matters: your router needs to send DNS traffic to Known. That is how Known sees your network.',
 		knownIp: 'Known IP on your network:',
-		routerHint: "Log into your router at the address below. Find the DNS or DHCP settings. Set the primary DNS server to the IP shown above.",
+		routerHint: "Log into your router and find the DNS or DHCP settings. Set the primary DNS server to the IP shown above.",
 		routerDoneBtn: 'Done. Unplug Known',
 		saving: 'Finishing setup…',
 		routerHelp:
@@ -72,9 +73,9 @@
 			'The setup page shows instructions for your router model. If you get stuck, email northsline@protonmail.com. Include your router model.',
 
 		// Success screen
-		stepDoneTitle: 'Your device is ready.',
+		stepDoneTitle: 'Known is ready.',
 		stepDoneBody: 'Unplug it from your PC and connect it to the wall adapter.',
-		stepDoneDashboard: 'When it is plugged in, your dashboard is at',
+		stepDoneDashboard: 'Open the dashboard at',
 		stepDoneUrl: 'known.local',
 		doneHelp:
 			'Your dashboard is at known.local. Plug Known into the wall. Wait for it to boot.',

@@ -11,7 +11,8 @@
 // The signature is over (serial || pubKey) using the root private key,
 // ECDSA P-256 with SHA-256.
 // The cert is DER-encoded as a SEQUENCE for transport, but we parse
-// it as a simple fixed-format binary blob here. Export interface DeviceCert {
+// it as a simple fixed-format binary blob here.
+export interface DeviceCert {
 	serial: string;       // hex, 8 bytes
 	pubKey: Uint8Array;   // 65 bytes uncompressed (0x04 || X || Y)
 	signature: Uint8Array; // DER-encoded ECDSA signature
@@ -74,7 +75,8 @@ async function importUncompressedPublicKey(pubKeyBytes: Uint8Array): Promise<Cry
 	// 30 59 30 13 06 07 2a 86 48 ce 3d 02 01
 	// 06 08 2a 86 48 ce 3d 03 01 07
 	// 03 42 00
-	// followed by the 65-byte uncompressed point. Const spkiPrefix = new Uint8Array([
+	// followed by the 65-byte uncompressed point.
+	const spkiPrefix = new Uint8Array([
 		0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86,
 		0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a,
 		0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03,
@@ -147,7 +149,8 @@ export async function verifyCertificate(
 	message.set(hexToBytes(cert.serial), 0);
 	message.set(cert.pubKey, 8);
 
-	// Web Crypto expects raw (64-byte) signatures, not DER. Const rawSig = derToRawSignature(cert.signature);
+	// Web Crypto expects raw (64-byte) signatures, not DER.
+	const rawSig = derToRawSignature(cert.signature);
 
 	// Import root public key
 	const rootKey = await crypto.subtle.importKey(
