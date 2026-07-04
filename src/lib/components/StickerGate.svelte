@@ -255,7 +255,7 @@
 	<div class="gate-grain" aria-hidden="true"></div>
 
 	<div class="gate-inner">
-		<img src="{base}/favicon.png" alt="" class="gate-mark" aria-hidden="true" />
+		<img src="{base}/logo.png" alt="" class="gate-mark" aria-hidden="true" />
 
 		{#if !supported}
 			<div class="gate-head">
@@ -476,8 +476,8 @@
 		display: grid;
 		place-items: center;
 		padding: 32px;
-		background: var(--charcoal);
-		color: var(--paper);
+		background: var(--bg-canvas);
+		color: var(--ink);
 		overflow: hidden;
 		animation: gateIn 0.6s var(--ease-out) both;
 	}
@@ -493,7 +493,7 @@
 	.gate-grain {
 		position: absolute;
 		inset: 0;
-		background: radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 60%);
+		background: radial-gradient(120% 90% at 50% 0%, var(--bg-soft), transparent 60%);
 		pointer-events: none;
 	}
 
@@ -511,8 +511,10 @@
 	.gate-mark {
 		width: 52px;
 		height: 52px;
-		border-radius: 14px;
+		border-radius: var(--radius-card);
 		display: block;
+		background: var(--surface-dark);
+		padding: 10px;
 	}
 
 	.gate-head {
@@ -521,17 +523,17 @@
 		gap: 10px;
 	}
 	.gate-title {
-		font-family: 'Instrument Sans', sans-serif;
+		font-family: var(--font-body);
 		font-weight: 500;
 		font-size: clamp(28px, 5vw, 36px);
 		letter-spacing: -0.03em;
 		line-height: 1.05;
-		color: var(--paper);
+		color: var(--ink);
 	}
 	.gate-sub {
 		font-size: 15px;
 		line-height: 1.5;
-		color: var(--paper-soft);
+		color: var(--ink-soft);
 	}
 
 	.panel {
@@ -550,15 +552,15 @@
 	}
 	.field-label {
 		font-size: 12.5px;
-		color: var(--paper-soft);
+		color: var(--ink-soft);
 	}
 	.field-input {
 		height: 48px;
 		padding: 0 14px;
-		color: var(--paper);
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.14);
-		border-radius: var(--r-sm);
+		color: var(--ink);
+		background: var(--bg-soft);
+		border: 1px solid var(--hairline);
+		border-radius: var(--radius-pill);
 		outline: none;
 		font-size: 15px;
 		transition:
@@ -567,9 +569,9 @@
 			box-shadow 0.18s var(--ease);
 	}
 	.field-input:focus {
-		border-color: var(--paper-soft);
-		background: rgba(255, 255, 255, 0.09);
-		box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+		border-color: var(--ink-soft);
+		background: var(--bg-canvas);
+		box-shadow: 0 0 0 3px var(--hairline);
 	}
 	select.field-input {
 		appearance: none;
@@ -588,22 +590,22 @@
 	.toggle-pass {
 		height: 48px;
 		padding: 0 12px;
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.14);
-		border-radius: var(--r-sm);
-		color: var(--paper-soft);
+		background: var(--bg-soft);
+		border: 1px solid var(--hairline);
+		border-radius: var(--radius-pill);
+		color: var(--ink-soft);
 		font-size: 13px;
 		cursor: pointer;
 		white-space: nowrap;
 	}
 	.toggle-pass:hover {
-		background: rgba(255, 255, 255, 0.09);
+		background: var(--bg-canvas);
 	}
 
 	.text-btn {
 		background: none;
 		border: none;
-		color: var(--paper-mute);
+		color: var(--ink-mute);
 		font-size: 12.5px;
 		cursor: pointer;
 		padding: 0;
@@ -611,10 +613,10 @@
 		text-underline-offset: 2px;
 	}
 	.text-btn:hover {
-		color: var(--paper-soft);
+		color: var(--ink-soft);
 	}
 	.sep {
-		color: var(--paper-mute);
+		color: var(--ink-mute);
 		margin: 0 6px;
 	}
 
@@ -622,7 +624,7 @@
 		min-height: 18px;
 		font-size: 12.5px;
 		line-height: 1.4;
-		color: oklch(0.8 0.11 25);
+		color: var(--warn);
 	}
 
 	.toggle-pass:focus-visible,
@@ -630,29 +632,30 @@
 	.text-btn:focus-visible,
 	.copy-url-btn:focus-visible,
 	.gate-submit:focus-visible {
-		outline: 2px solid var(--paper-soft);
+		outline: 2px solid var(--ink-soft);
 		outline-offset: 2px;
 	}
 
 	.gate-sub {
-		color: var(--paper-soft);
+		color: var(--ink-soft);
 	}
 
 	.gate-submit {
 		width: 100%;
 		height: 48px;
-		border-radius: var(--r-sm);
-		background: var(--paper);
-		color: var(--ink);
+		border-radius: var(--radius-pill);
+		background: var(--ink);
+		color: var(--on-dark);
 		font-weight: 600;
 		font-size: 15px;
 		letter-spacing: -0.01em;
 		transition:
 			opacity 0.2s var(--ease),
-			transform 0.15s var(--ease);
+			transform 0.15s var(--ease),
+			background 0.18s var(--ease);
 	}
 	.gate-submit:hover {
-		opacity: 0.88;
+		background: var(--ink-soft);
 	}
 	.gate-submit:active {
 		transform: scale(0.99);
@@ -665,7 +668,7 @@
 	.gate-hint {
 		font-size: 12px;
 		line-height: 1.5;
-		color: var(--paper-mute);
+		color: var(--ink-mute);
 	}
 	.gate-help {
 		display: flex;
@@ -676,54 +679,54 @@
 		align-items: center;
 		background: none;
 		border: none;
-		color: var(--paper-soft);
+		color: var(--ink-soft);
 		font-size: 14px;
 		cursor: pointer;
 		padding: 6px 10px;
-		border-radius: var(--r-sm);
+		border-radius: var(--radius-pill);
 		opacity: 0.8;
 		gap: 6px;
 	}
 	.help-btn:hover {
 		opacity: 1;
-		background: rgba(255, 255, 255, 0.05);
+		background: var(--bg-soft);
 	}
 	.help-panel {
 		font-size: 12px;
 		line-height: 1.5;
-		color: var(--paper-soft);
-		background: rgba(255, 255, 255, 0.05);
+		color: var(--ink-soft);
+		background: var(--bg-soft);
 		padding: 10px 12px;
-		border-radius: var(--r-sm);
+		border-radius: var(--radius-pill);
 		margin-top: 4px;
 	}
 
 	/* Router step */
 	.router-badge {
 		font-size: 13px;
-		color: var(--paper);
-		background: rgba(255, 255, 255, 0.08);
+		color: var(--ink);
+		background: var(--hairline);
 		padding: 6px 12px;
-		border-radius: var(--r-pill);
+		border-radius: var(--radius-pill);
 		display: inline-block;
 		align-self: center;
 	}
 	.router-ip {
 		font-size: 14px;
-		color: var(--paper-soft);
+		color: var(--ink-soft);
 	}
 	.router-ip .mono {
-		font-family: 'Space Mono', monospace;
+		font-family: var(--font-mono);
 		letter-spacing: 0.02em;
-		color: var(--paper);
+		color: var(--ink);
 	}
 	.router-instructions {
 		font-size: 13.5px;
 		line-height: 1.6;
-		color: var(--paper-soft);
-		background: rgba(255, 255, 255, 0.05);
+		color: var(--ink-soft);
+		background: var(--bg-soft);
 		padding: 12px 14px;
-		border-radius: var(--r-sm);
+		border-radius: var(--radius-pill);
 		text-align: left;
 	}
 
@@ -733,10 +736,10 @@
 	.done-line {
 		font-size: 14px;
 		line-height: 1.6;
-		color: var(--paper-soft);
+		color: var(--ink-soft);
 	}
 	.done-link {
-		color: var(--paper);
+		color: var(--ink);
 		text-decoration: underline;
 		text-underline-offset: 3px;
 		word-break: break-all;
@@ -747,7 +750,7 @@
 	.done-availability {
 		font-size: 13px;
 		line-height: 1.5;
-		color: var(--paper-mute);
+		color: var(--ink-mute);
 	}
 	.dashboard-hint {
 		margin-top: 8px;
@@ -755,7 +758,7 @@
 	.copy-url-btn {
 		background: none;
 		border: none;
-		color: var(--paper);
+		color: var(--ink);
 		font-size: inherit;
 		font-family: inherit;
 		cursor: pointer;
@@ -769,6 +772,6 @@
 	.copied-msg {
 		margin-left: 8px;
 		font-size: 12px;
-		color: oklch(0.55 0.14 145);
+		color: var(--trust);
 	}
 </style>
