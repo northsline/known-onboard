@@ -4,7 +4,8 @@
 // 1. Checking the device certificate is signed by the Northsline root key
 // 2. Challenging the device with a random nonce and verifying the signature
 //
-// No network calls. No backend. Everything happens in the browser. Import { ROOT_PUBLIC_KEY_JWK } from '$lib/root-key';
+// No network calls. No backend. Everything happens in the browser.
+import { ROOT_PUBLIC_KEY_JWK } from '$lib/root-key';
 
 // Certificate format (minimal, not full X.509):
 // A JSON object: { serial: string, pubKey: string(hex), signature: string(hex) }
