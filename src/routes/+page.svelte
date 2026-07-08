@@ -1,5 +1,5 @@
 <script lang="ts">
-	import StickerGate from '$lib/components/StickerGate.svelte';
+	import DeviceGate from '$lib/components/DeviceGate.svelte';
 </script>
 
-<StickerGate />
+<DeviceGate />
