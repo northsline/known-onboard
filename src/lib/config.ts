@@ -1,5 +1,5 @@
 export const STORAGE_KEYS = {
-	sticker: 'known:sticker'
+	sticker: 'heron:sticker'
 } as const;
 
 // USB WebSerial provisioning. The PWA talks to the Pico over a

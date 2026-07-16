@@ -123,7 +123,7 @@ async function waitForDeviceReady(): Promise<void> {
 
 export async function connectSerial(): Promise<void> {
 	if (!isSerialSupported()) {
-		throw new Error('WebSerial is not supported. Use Chrome or Edge to set up your Known.');
+		throw new Error('WebSerial is not supported. Use Chrome or Edge to set up your Heron.');
 	}
 
 	console.log('[serial] connectSerial: requesting port');

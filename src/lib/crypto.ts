@@ -1,6 +1,6 @@
 // lib/crypto.ts: client-side device verification using Web Crypto.
 //
-// The PWA verifies that a Known device is authentic by:
+// The PWA verifies that a Heron device is authentic by:
 // 1. Checking the device certificate is signed by the Northsline root key
 // 2. Challenging the device with a random nonce and verifying the signature
 //

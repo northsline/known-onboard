@@ -1,9 +1,9 @@
-# Known Onboard
+# Heron Onboard
 
-The setup app for Known, the on-device network privacy monitor by Northsline.
+The setup app for Heron, the on-device network privacy monitor by Northsline.
 
 This is a small, hosted PWA that runs once, in your browser, to provision a new
-Known device:
+Heron device:
 
 1. Connect the device over USB.
 2. Verify the device identity. A cryptographic challenge-response proves
@@ -13,10 +13,10 @@ Known device:
 4. Configure your router to point DNS to the device (instructions shown in-app).
 
 After that, you unplug the device, plug it into a wall adapter, and use the
-[Known Dashboard](https://github.com/northsline/known-dashboard) to monitor
+[Heron Dashboard](https://github.com/northsline/heron-dashboard) to monitor
 your network locally. This app has no further role.
 
-It was split out of `known-dashboard` so the two concerns can ship and update
+It was split out of `heron-dashboard` so the two concerns can ship and update
 independently: onboarding is a hosted, single-purpose page; the dashboard is a
 richer local app.
 
@@ -60,7 +60,7 @@ The build is fully static. It's intended for GitHub Pages. When building for a
 project page, set `BASE_PATH` to the served subpath so asset URLs resolve:
 
 ```bash
-BASE_PATH=/known-onboard npm run build
+BASE_PATH=/heron-onboard npm run build
 ```
 
 ## License

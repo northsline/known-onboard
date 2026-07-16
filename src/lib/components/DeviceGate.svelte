@@ -44,7 +44,7 @@
 
 	async function copyUrl() {
 		try {
-			await navigator.clipboard.writeText('known.local');
+			await navigator.clipboard.writeText('heron.local');
 			copied = true;
 			setTimeout(() => copied = false, 2000);
 		} catch {
